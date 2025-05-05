@@ -5,6 +5,8 @@ import Swap from "./components/Swap/Swap";
 import Liquidity from "./components/Liquidity/Liquidity";
 import { Provider } from "react-redux";
 import store from "./app/store";
+import Content from "./components/Content";
+import Footer from "./components/footer/Footer";
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
           <Route path="/liquidity" element={<Liquidity />} />
         </Routes>
         <Outlet />
+        <Content />
+        <Footer />
       </div>
     </Provider>
   );

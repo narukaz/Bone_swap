@@ -26,6 +26,7 @@ import { data } from "react-router-dom";
 function SwapMechanism() {
   const suiClient = useSuiClient();
   const [expandIndex, setExpandIndex] = useState(null);
+  const [isCoin, setIsCoin] = useState(false);
   const currentUser = useCurrentAccount();
   const [expandData, setExpandData] = useState([]);
   const { mutateAsync: signTransaction } = useSignTransaction();
@@ -35,7 +36,7 @@ function SwapMechanism() {
   const userCoins = useSelector((state) => state.wallet.userCoins);
   const dispatch = useDispatch();
   const [fromAmount, setFromAmount] = useState(0);
-  const [toAmount, setToAmount] = useState(0);
+  const [toAmount, setToAmount] = useState("select your token");
   const [calculatePrice, setCalculatedPrice] = useState(0);
   const swap = useSelector((state) => state.swap);
 
@@ -157,21 +158,20 @@ function SwapMechanism() {
 
   const fetchPrice = async (value) => {
     try {
-      if (!value) return;
-      if (
-        swap.toName === swap.fromName ||
-        value < 1 ||
-        swap.toName == "Select Token" ||
-        swap.fromName == "Select Token" ||
-        !swap.fromObjectId
-      ) {
+      if (swap.toName == "Select Token" || swap.fromName == "Select Token")
+        return;
+      if (value == 0) {
+        setToAmount(0);
+        return;
+      }
+      if (swap.toName === swap.fromName && swap.toName != "Select Token") {
         setToAmount(value);
         return;
       }
+
       let fn = `${swap.fromName.toLowerCase()}_to_${swap.toName.toLowerCase()}_price`;
       console.log(fn);
       const fromDecimalsBI = BigInt(swap.fromDecimal);
-      const toDecimalsBI = BigInt(swap.toDecimal);
       const amountBI = BigInt(value);
 
       // scale your input into u64 base units
@@ -188,7 +188,7 @@ function SwapMechanism() {
         transactionBlock: tx,
         sender: currentUser.address,
       });
-
+      console.log("tripped");
       console.log(res);
       const rawRet = res.results?.[0].returnValues?.[0][0];
 
@@ -231,12 +231,12 @@ function SwapMechanism() {
          flex flex-col gap-4 left-1/2 top-1/2 p-5 z-10 -translate-x-1/2 -translate-y-1/2 rounded-xl "
         >
           <div className="w-full flex flex-col items-center justify-center shadow-xl rounded-xl py-2 sticky right-5 top-0">
-            <h1 className="text-center mb-4 gap-9">select or add your token</h1>
+            {/* <h1 className="text-center mb-4 gap-9">select or add your token</h1> */}
             <div className="flex gap-5 mx-auto items-center justify-around">
               <input
                 type="string"
                 className="bg-gray-200 w-auto h-14 px-4 rounded-4xl text-[15px]"
-                placeholder="0x000000000000000000000000000000000000"
+                placeholder="search..."
                 // onChange={(e) => setSearchField(e.target.value)}
               />
               <button
@@ -285,12 +285,16 @@ function SwapMechanism() {
                         })
                       );
                       setIsTokenSelection(false);
+                      fetchPrice(swap.fromAmount);
                     }
                   }}
-                  className=" group w-full flex flex-col  items-center  border   justify-between rounded-4xl text-2xl px-4 py-4  hover:border-blue-500 hover:border-3 text-gray-800 cursor-pointer shadow-shadow-[0px_0px_0px_0px_rgb(0,0,0)] hover:shadow-[3px_3px_0px_0px_rgb(50,40,10)] transition-all"
+                  className=" group  w-full flex flex-col items-center border justify-between rounded-2xl text-2xl px-4 py-4  hover:border-blue-500 hover:border-3 text-gray-800 cursor-pointer shadow-shadow-[0px_0px_0px_0px_rgb(0,0,0)] hover:shadow-[3px_3px_0px_0px_rgb(50,40,10)] transition-all"
                 >
-                  <div className="w-full flex items-center gap-5   justify-between transition-all">
-                    <h1 className="font-bold">{token.symbol}</h1>
+                  <div className="w-full flex items-center gap-5 justify-between transition-all">
+                    <h1 className="font-bold">
+                      {token.symbol[0].toUpperCase() +
+                        token.symbol.slice(1).toLowerCase()}
+                    </h1>
                     {isTo === "from" && <ChevronDown />}
                   </div>
                   {/* this is my code B */}
@@ -302,6 +306,7 @@ function SwapMechanism() {
                               onClick={() => {
                                 console.log(coin.coinObjectId);
                                 setIsTokenSelection(false);
+                                setIsCoin(true);
                                 dispatch(
                                   setTransactionData({
                                     fromObjectId: coin.coinObjectId,
@@ -326,10 +331,10 @@ function SwapMechanism() {
                               </div>
 
                               <div className="flex flex-col justify-center">
-                                <p className="text-[12px] font-bold text-right">
+                                <p className="text-[12px] font-bold text-right ">
                                   Coin_Balance
                                 </p>
-                                <span className="font-light text-sm">
+                                <span className={`font-light text-sm`}>
                                   {(
                                     coin.balance /
                                     10 ** token.decimals
@@ -351,18 +356,18 @@ function SwapMechanism() {
 
       <div className="mb-[50px]">
         <div
-          className="lg:w-xm mx-auto bg-white shadow-xl rounded-2xl p-6 space-y-4 
-      flex flex-col items-center"
+          className="lg:w-xm mx-auto bg-white shadow-xl rounded-2xl p-6 
+      flex flex-col items-center gap-3"
         >
-          <h3 className="text-gray-600 text-center self-start pl-4 cursor-none">
+          {/* <h3 className="text-gray-600 text-center self-start pl-4 cursor-none">
             make your trade
-          </h3>
-          <div className=" w-sm flex flex-col  gap-2 bg-gray-100 rounded-2xl px-5 py-5">
-            <p className="text-sm cursor-none">you pay</p>
+          </h3> */}
+          <div className=" w-sm flex flex-col  gap-2 bg-gray-100  rounded-2xl px-5 py-5">
+            {/* <p className="text-sm cursor-none">you pay</p> */}
             <div className="flex items-center h-14 ">
               {!isLoading ? (
                 <div
-                  className="flex gap-2 font-medium hover:bg-gray-200 py-4 rounded-2xl cursor-pointer items-center transition-colors p-3"
+                  className="flex gap-2 border font-medium hover:scale-105 hover:bg-gray-200 shadow-[2px_2px_0px_rgb(0,0,0)] hover:border-orange-500 hover:shadow-[2px_2px_0px_rgb(255,104,104)] py-2 rounded-2xl cursor-pointer items-center  p-3 transition-all"
                   onClick={() => {
                     setIsTokenSelection((prev) => !prev);
                     setIsTo("from");
@@ -372,7 +377,7 @@ function SwapMechanism() {
                   <ChevronRight />
                 </div>
               ) : (
-                <div className="flex gap-2 font-medium hover:bg-gray-200 py-4 rounded-2xl cursor-pointer items-center transition-colors p-3">
+                <div className="flex gap-2 font-medium hover:scale-105 hover:bg-gray-200 shadow-[2px_2px_0px_rgb(0,0,0)] hover:shadow-[2px_2px_0px_rgb(255,104,104)] py-4 rounded-2xl cursor-pointer items-center transition-colors px-3">
                   <LockIcon
                     size={40}
                     className="cursor-not-allowed animate-bounce "
@@ -381,23 +386,31 @@ function SwapMechanism() {
               )}
 
               <input
-                value={swap.fromAmount}
+                value={fromAmount}
                 onChange={(e) => {
                   const value = e.target.value;
                   dispatch(setTransactionData({ fromAmount: value }));
                   setFromAmount(value);
                   fetchPrice(value);
                 }}
-                className="w-full text-right font-light  outline-none border-none text-3xl pb-2 relative"
+                className="w-full  mx-2 text-right  font-light  outline-none border-none text-2xl py-3  relative"
                 type="number"
                 placeholder="enter amount"
                 disabled={isLoading}
               />
             </div>
-            <div className="flex justify-between font-light ">
-              <p>balance</p>
-              <p>
-                {swap.fromBalance} {swap.fromName}
+            <p className="text-gray-300 text-center select-none">
+              _______________________________
+            </p>
+            <div className="flex  pr-2 justify-between gap-3 font-light">
+              <p className="text-gray-400 ml-2 select-none">balance:</p>
+              <p
+                className={`italic  text-gray-400 select-none ${
+                  !isCoin ? "text-red-300" : ""
+                }`}
+              >
+                {swap.fromBalance?.toFixed(2) || null}
+                {!isCoin ? "select a coin" : swap.fromName + "s"}
               </p>
             </div>
           </div>
@@ -406,10 +419,10 @@ function SwapMechanism() {
               onSwapValues();
             }}
             size={30}
-            className="rotate-90 cursor-pointer rounded-2xl hover:text-blue-600"
+            className="hover:scale-125 hover:-rotate-180 cursor-pointer rounded-2xl hover:text-blue-600 transition-all"
           />
-          <div className=" w-sm flex flex-col  gap-2 bg-gray-100 rounded-2xl px-5 py-5">
-            <p className="text-sm cursor-none">You receive</p>
+          <div className=" w-sm flex flex-col self-start gap-2 bg-gray-100 rounded-2xl px-5 py-5">
+            {/* <p className="text-sm cursor-none">You receive</p> */}
             <div className="flex items-center h-14 ">
               {!isLoading ? (
                 <div
@@ -417,7 +430,7 @@ function SwapMechanism() {
                     setIsTokenSelection((prev) => !prev);
                     setIsTo("to");
                   }}
-                  className="flex gap-2 font-medium hover:bg-gray-200 items-center py-4 rounded-2xl cursor-pointer transition-colors p-3"
+                  className="flex gap-2 font-medium border hover:border-orange-500  hover:scale-105 hover:bg-gray-200 shadow-[2px_2px_0px_rgb(0,0,0)] hover:shadow-[2px_2px_0px_rgb(255,104,104)] items-center py-2 rounded-2xl cursor-pointer transition-colors px-3"
                 >
                   <h1>{swap.toName}</h1>
                   <ChevronRight />
@@ -431,11 +444,11 @@ function SwapMechanism() {
                 </div>
               )}
               <input
-                className="w-full text-right font-light text-gray-500  outline-none border-none text-3xl pb-2"
+                className="w-full  pr-5 text-right  font-light  outline-none border-none text-2xl py-3  relative"
                 placeholder="calculating..."
                 disabled
-                type="number"
-                value={toAmount}
+                type="text"
+                value={fromAmount == 0 ? 0 : toAmount}
                 onChange={(e) => {
                   setToAmount(e.target.value);
                 }}
