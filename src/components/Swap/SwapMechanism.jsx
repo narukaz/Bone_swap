@@ -204,8 +204,8 @@ function SwapMechanism() {
   };
 
   useEffect(() => {
-    console.log("ADDRESS FROM SWAP MECHANISM ", address);
-  }, [address]);
+    handleToggle();
+  }, []);
 
   useEffect(() => {
     fetchPrice(fromAmount);
