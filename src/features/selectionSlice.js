@@ -5,6 +5,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   toName: "Select Token",
   toObjectId: "",
+  fromBalance: 0,
   toBalance: 0,
   toDecimal: 0,
   fromName: "Select Token",
@@ -17,17 +18,7 @@ const swapDetails = createSlice({
   initialState,
   reducers: {
     setTransactionData: (state, action) => {
-      // console.log("swap from inside of reducer", action);
       Object.assign(state, action.payload);
-      // state.fromBalance = action.payload.fromBalance || state.fromName;
-      // state.fromName = action.payload.fromName || state.fromName;
-      // state.fromDecimal = action.payload.fromDecimal || state.fromDecimal;
-      // state.fromObjectId = action.payload.fromObjectId || state.fromObjectId;
-      // //
-      // state.toBalance = action.payload.toBalance || state.toBalance;
-      // state.toName = action.payload.toName || state.toName;
-      // state.toDecimal = action.payload.toDecimal || state.toDecimal;
-      // state.toObjectId = action.payload.toObjectId || state.toObjectId;
     },
   },
 });

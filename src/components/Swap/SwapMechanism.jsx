@@ -7,6 +7,7 @@ import {
   ArrowRightLeft,
   ChevronDown,
   ChevronRight,
+  Loader,
   LoaderIcon,
   Lock,
   LockIcon,
@@ -40,7 +41,6 @@ function SwapMechanism() {
   const [calculatePrice, setCalculatedPrice] = useState(0);
   const swap = useSelector((state) => state.swap);
 
-  // console.log("toName", toName, "toObjectId", toObjectId);
   const [isTo, setIsTo] = useState("none");
 
   const PACKAGE_ID =
@@ -64,7 +64,7 @@ function SwapMechanism() {
       id: POOL_OBJECT_ID,
       options: { showContent: true, showType: true, showDisplay: true },
     });
-    console.log(poolObj);
+
     dispatch(setLoading());
     const { fields } = poolObj.data.content;
     delete fields.id;
@@ -82,25 +82,26 @@ function SwapMechanism() {
         coinType,
       });
       result_array.push({ ...res, coinType, address: currentUser.address });
-
-      console.log(result_array);
     }
     dispatch(setAllCoins({ userCoins: result_array }));
 
     dispatch(setLoading());
   };
 
-  const onSwapValues = () => {
+  function handleToggle() {
     dispatch(
       setTransactionData({
-        fromName: swap.toName,
         toName: swap.fromName,
+        fromName: swap.toName,
+        fromObjectId: "",
         fromDecimal: swap.toDecimal,
         toDecimal: swap.fromDecimal,
+        fromBalance: 0,
       })
     );
-  };
-
+    setFromAmount(toAmount);
+    setIsCoin(false);
+  }
   const onSwap = async () => {
     if (swap.fromName === swap.toName || !swap.fromAmount) {
       console.log("Invalid swap parameters.");
@@ -112,11 +113,9 @@ function SwapMechanism() {
     const amountBI = BigInt(fromAmount);
     const scaledAmount = amountBI * 10n ** fromDecimalsBI;
     let fn = `${swap.fromName.toLowerCase()}_to_${swap.toName.toLowerCase()}_swap`;
-    console.log(fn);
-    console.log("coinId at the time of swap", swap.fromObjectId);
 
     let { data } = await suiClient.getObject({ id: swap.fromObjectId });
-    // console.log(object);
+
     try {
       const tx = new Transaction();
       tx.moveCall({
@@ -170,7 +169,7 @@ function SwapMechanism() {
       }
 
       let fn = `${swap.fromName.toLowerCase()}_to_${swap.toName.toLowerCase()}_price`;
-      console.log(fn);
+
       const fromDecimalsBI = BigInt(swap.fromDecimal);
       const amountBI = BigInt(value);
 
@@ -188,12 +187,11 @@ function SwapMechanism() {
         transactionBlock: tx,
         sender: currentUser.address,
       });
-      console.log("tripped");
-      console.log(res);
+
       const rawRet = res.results?.[0].returnValues?.[0][0];
 
       // bytesToBigIntLE(rawRet);
-      console.log(rawRet);
+
       const u8 = new Uint8Array(rawRet);
       const view = new DataView(u8.buffer);
 
@@ -256,7 +254,6 @@ function SwapMechanism() {
                   key={index}
                   onClick={async () => {
                     if (isTo == "from") {
-                      console.log(token);
                       const { data } = await suiClient.getCoins({
                         owner: token.address,
                         coinType: token.coinType,
@@ -304,7 +301,6 @@ function SwapMechanism() {
                         ? expandData.map((coin, index) => (
                             <div
                               onClick={() => {
-                                console.log(coin.coinObjectId);
                                 setIsTokenSelection(false);
                                 setIsCoin(true);
                                 dispatch(
@@ -409,14 +405,14 @@ function SwapMechanism() {
                   !isCoin ? "text-red-300" : ""
                 }`}
               >
-                {swap.fromBalance?.toFixed(2) || null}
+                {swap.fromBalance != 0 ? swap.fromBalance?.toFixed(2) : null}
                 {!isCoin ? "select a coin" : swap.fromName + "s"}
               </p>
             </div>
           </div>
           <ArrowRightLeft
             onClick={() => {
-              onSwapValues();
+              handleToggle();
             }}
             size={30}
             className="hover:scale-125 hover:-rotate-180 cursor-pointer rounded-2xl hover:text-blue-600 transition-all"
@@ -463,13 +459,15 @@ function SwapMechanism() {
           </div>
           <button
             onClick={() => {
-              console.log("onswap");
               onSwap();
             }}
+            disabled={isLoading || !swap.fromObjectId}
             className="bg-white border hover:bg-black hover:text-white w-[200px] text-black  font-medium px-5 py-2 rounded-2xl cursor-pointer transition-all"
           >
             {isLoading ? (
-              <LoaderIcon className="mx-auto animate-spin" />
+              <Loader />
+            ) : !swap.fromObjectId ? (
+              "select coin to swap"
             ) : (
               "Swap"
             )}

@@ -1,11 +1,9 @@
 import React from "react";
 import SwapMechanism from "./SwapMechanism";
-import Footer from "../footer/Footer";
-import Content from "../Content";
 
 function Swap() {
   return (
-    <div className="lg:h-lvw flex flex-col gap-4 items-center">
+    <div className=" flex flex-col gap-4 items-center">
       <h1 className="font-bold text-7xl select-none">Crazy swap</h1>
       <h3 className="font-semibold text-4xl text-center select-none">
         💥 Swap like a maniac. 💸 Trade like it’s 3025. <br />
