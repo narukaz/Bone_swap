@@ -44,12 +44,12 @@ function SwapMechanism() {
   const [isTo, setIsTo] = useState("none");
 
   const PACKAGE_ID =
-    "0x10d64c839d0707119181c72f12f1efb07eb0b5d26f830bb6030edbffaaa0b2f2";
+    "0xc50ffd45a3151e0bffda30a9dfacb0754b0087cb840768888530d5affbb9aead";
   // const PACKAGE_ID =
   //   "0x23380184f8201aea58e571dd11913f7dbebd39a5b291bf2f0bdae60df4323a67"; working
   const MODULE_NAME = "custom_token";
   const POOL_OBJECT_ID =
-    "0xf44f8dba33f00be73dd792c75f460f040995d6a13d91125558e17fca8c0fa7e6";
+    "0x1ddd8978afa8f535285c67627d0f35be88806ff5946c74ce4ddd8faa9c08566f";
   // const POOL_OBJECT_ID =
   //   "0xca1531cc4b36c0f8a7427986c627f9f080176a799842d8900494f7fbd79e0c1d"; working
 
