@@ -9,7 +9,12 @@ function Footer() {
           <h3 class="text-sm font-semibold uppercase">Company</h3>
           <ul class="space-y-1 text-sm">
             <li>
-              <a href="/about" class="hover:underline">
+              <a
+                href="https://www.linkedin.com/in/harpreet-singh-031528284/"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="hover:underline"
+              >
                 About
               </a>
             </li>
@@ -49,23 +54,25 @@ function Footer() {
         </div>
 
         {/* <!-- Support --> */}
-        <div class="space-y-2">
-          <h3 class="text-sm font-semibold uppercase">Support</h3>
-          <ul class="space-y-1 text-sm">
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold uppercase">Support</h3>
+          <ul className="space-y-1 text-sm">
             <li>
-              <a href="/help" class="hover:underline">
-                Help Center
-              </a>
+              <a href="/help" className="hover:underline">Help Center</a>
             </li>
             <li>
-              <a href="/faq" class="hover:underline">
-                FAQ
-              </a>
+              <a href="/faq" className="hover:underline">FAQ</a>
             </li>
             <li>
-              <a href="/contact" class="hover:underline">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText("happybiostockcode07040@gmail.com");
+                  alert("Email copied!");
+                }}
+                className="hover:underline text-left"
+              >
                 Contact Us
-              </a>
+              </button>
             </li>
           </ul>
         </div>
