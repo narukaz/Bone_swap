@@ -39,6 +39,8 @@ function SwapMechanism() {
   const [fromAmount, setFromAmount] = useState(0);
   const [toAmount, setToAmount] = useState("select your token");
   const [calculatePrice, setCalculatedPrice] = useState(0);
+  const [swapStatus, setSwapStatus] = useState(""); // to show swap status
+  const [isSwapping, setIsSwapping] = useState(false); // for buffering/loading
   const swap = useSelector((state) => state.swap);
 
   const [isTo, setIsTo] = useState("none");
@@ -108,7 +110,11 @@ function SwapMechanism() {
       setToAmount(0);
       return;
     }
-    setLoading();
+
+    dispatch(setLoading());
+    setIsSwapping(true);
+    setSwapStatus("Swapping...");
+
     const fromDecimalsBI = BigInt(swap.fromDecimal);
     const amountBI = BigInt(fromAmount);
     const scaledAmount = amountBI * 10n ** fromDecimalsBI;
@@ -124,36 +130,35 @@ function SwapMechanism() {
         function: fn,
         arguments: [
           tx.object(POOL_OBJECT_ID),
-          tx.objectRef({
-            ...data,
-          }),
-
+          tx.objectRef({ ...data }),
           tx.pure.u64(scaledAmount),
         ],
       });
 
       tx.setSender(currentUser?.address);
-      const { bytes, signature, reportTransactionEffects } =
-        await signTransaction({
-          transaction: tx,
-          chain: "sui:testnet",
-        });
+
+      const { bytes, signature } = await signTransaction({
+        transaction: tx,
+        chain: "sui:testnet",
+      });
 
       const executeResult = await suiClient.executeTransactionBlock({
-        // senderAddress: address,
         transactionBlock: bytes,
         signature,
-        options: {
-          showRawEffects: true,
-        },
+        options: { showRawEffects: true },
       });
 
       fetchData();
-      setLoading();
+      setSwapStatus("Swap successful! 🎉");
     } catch (e) {
       console.error("Swap failed:", e);
+      setSwapStatus("Swap failed. Please try again.");
+    } finally {
+      setIsSwapping(false);
+      dispatch(setLoading());
     }
   };
+
 
   const fetchPrice = async (value) => {
     try {
@@ -235,7 +240,7 @@ function SwapMechanism() {
                 type="string"
                 className="bg-gray-200 w-auto h-14 px-4 rounded-4xl text-[15px]"
                 placeholder="search..."
-                // onChange={(e) => setSearchField(e.target.value)}
+              // onChange={(e) => setSearchField(e.target.value)}
               />
               <button
                 // onClick={() => searchCoin("")}
@@ -299,46 +304,46 @@ function SwapMechanism() {
                     <div className="flex flex-col h-46   gap-3 w-full mt-5 overflow-y-auto  bg-gradient-to-br from-white to-blue-50 rounded-xl transition-all p-3">
                       {expandData && expandData.length > 0
                         ? expandData.map((coin, index) => (
-                            <div
-                              onClick={() => {
-                                setIsTokenSelection(false);
-                                setIsCoin(true);
-                                dispatch(
-                                  setTransactionData({
-                                    fromObjectId: coin.coinObjectId,
-                                    fromBalance:
-                                      coin.balance / 10 ** swap.fromDecimal,
-                                  })
-                                );
-                                fetchPrice(swap.fromAmount);
-                              }}
-                              id={index}
-                              className="flex justify-between rounded-2xl items-center px-4 py-4  bg-white text-gray-700 border hover:bg-black hover:text-white  transition-all "
-                            >
-                              <div className="flex flex-col justify-center">
-                                <p className="text-[12px] font-bold">
-                                  Coin_Object
-                                </p>
-                                <span className="font-light text-sm truncate">
-                                  {coin.coinObjectId.slice(0, 5) +
-                                    "..." +
-                                    coin.coinObjectId.slice(-5)}
-                                </span>
-                              </div>
-
-                              <div className="flex flex-col justify-center">
-                                <p className="text-[12px] font-bold text-right ">
-                                  Coin_Balance
-                                </p>
-                                <span className={`font-light text-sm`}>
-                                  {(
-                                    coin.balance /
-                                    10 ** token.decimals
-                                  ).toFixed(0)}
-                                </span>
-                              </div>
+                          <div
+                            onClick={() => {
+                              setIsTokenSelection(false);
+                              setIsCoin(true);
+                              dispatch(
+                                setTransactionData({
+                                  fromObjectId: coin.coinObjectId,
+                                  fromBalance:
+                                    coin.balance / 10 ** swap.fromDecimal,
+                                })
+                              );
+                              fetchPrice(swap.fromAmount);
+                            }}
+                            id={index}
+                            className="flex justify-between rounded-2xl items-center px-4 py-4  bg-white text-gray-700 border hover:bg-black hover:text-white  transition-all "
+                          >
+                            <div className="flex flex-col justify-center">
+                              <p className="text-[12px] font-bold">
+                                Coin_Object
+                              </p>
+                              <span className="font-light text-sm truncate">
+                                {coin.coinObjectId.slice(0, 5) +
+                                  "..." +
+                                  coin.coinObjectId.slice(-5)}
+                              </span>
                             </div>
-                          ))
+
+                            <div className="flex flex-col justify-center">
+                              <p className="text-[12px] font-bold text-right ">
+                                Coin_Balance
+                              </p>
+                              <span className={`font-light text-sm`}>
+                                {(
+                                  coin.balance /
+                                  10 ** token.decimals
+                                ).toFixed(0)}
+                              </span>
+                            </div>
+                          </div>
+                        ))
                         : null}
                     </div>
                   )}
@@ -401,9 +406,8 @@ function SwapMechanism() {
             <div className="flex  pr-2 justify-between gap-3 font-light">
               <p className="text-gray-400 ml-2 select-none">balance:</p>
               <p
-                className={`italic  text-gray-400 select-none ${
-                  !isCoin ? "text-red-300" : ""
-                }`}
+                className={`italic  text-gray-400 select-none ${!isCoin ? "text-red-300" : ""
+                  }`}
               >
                 {swap.fromBalance != 0 ? swap.fromBalance?.toFixed(2) : null}
                 {!isCoin ? "select a coin" : swap.fromName + "s"}
@@ -462,7 +466,7 @@ function SwapMechanism() {
               onSwap();
             }}
             disabled={isLoading || !swap.fromObjectId}
-            className="bg-white border hover:bg-black hover:text-white w-[200px] text-black  font-medium px-5 py-2 rounded-2xl cursor-pointer transition-all"
+            className="bg-white border hover:bg-black hover:text-white w-[200px] text-black font-medium px-5 py-2 rounded-2xl cursor-pointer transition-all"
           >
             {isLoading ? (
               <Loader />
@@ -472,6 +476,14 @@ function SwapMechanism() {
               "Swap"
             )}
           </button>
+
+          {swapStatus && (
+            <p className="text-center mt-2 text-sm font-medium text-gray-700">
+              {isSwapping ? <LoaderIcon className="inline animate-spin mr-2" /> : null}
+              {swapStatus}
+            </p>
+          )}
+
         </div>
       </div>
     </>
